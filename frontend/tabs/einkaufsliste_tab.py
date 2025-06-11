@@ -3,7 +3,7 @@ import requests
 
 API_URL = "http://localhost:5004/api/einkaufsliste"
 ZUTATEN_API = "http://localhost:5001/api/zutaten"
-KAUFEN_ENDPOINT = lambda eid: f"{API_URL}/{eid}/kaufen"
+def KAUFEN_ENDPOINT(eid): return f"{API_URL}/{eid}/kaufen"
 
 
 def render():
@@ -14,8 +14,10 @@ def render():
         try:
             zutaten = requests.get(ZUTATEN_API).json()
             name_to_id = {z["name"]: z["id"] for z in zutaten}
-            auswahl = st.selectbox("Zutat auswählen", list(name_to_id.keys()), key="zutat_einkauf")
-            menge = st.number_input("Menge", min_value=1, step=1, key="menge_einkauf")
+            auswahl = st.selectbox("Zutat auswählen", list(
+                name_to_id.keys()), key="zutat_einkauf")
+            menge = st.number_input(
+                "Menge", min_value=1, step=1, key="menge_einkauf")
 
             if st.button("🛒 Zur Einkaufsliste hinzufügen", key="hinzufuegen_einkauf"):
                 payload = {"zutat_id": name_to_id[auswahl], "menge": menge}
@@ -51,9 +53,11 @@ def render():
 
                 if col3.button("💾", key=f"save_{eintrag['id']}"):
                     payload = {"zutat_id": eintrag["id"], "menge": neue_menge}
-                    res = requests.put(f"{API_URL}/{eintrag['id']}", json=payload)
+                    res = requests.put(
+                        f"{API_URL}/{eintrag['id']}", json=payload)
                     if res.ok:
-                        st.success(f"Menge von '{eintrag['zutat']}' aktualisiert!")
+                        st.success(
+                            f"Menge von '{eintrag['zutat']}' aktualisiert!")
                         st.rerun()
                     else:
                         st.error(f"Fehler: {res.text}")
@@ -61,7 +65,8 @@ def render():
                 if col4.button("🛍️", key=f"bought_{eintrag['id']}"):
                     res = requests.post(KAUFEN_ENDPOINT(eintrag["id"]))
                     if res.ok:
-                        st.success(f"'{eintrag['zutat']}' als gekauft markiert und in Vorrat übertragen!")
+                        st.success(
+                            f"'{eintrag['zutat']}' als gekauft markiert und in Vorrat übertragen!")
                         st.rerun()
                     else:
                         st.error(f"Fehler: {res.text}")

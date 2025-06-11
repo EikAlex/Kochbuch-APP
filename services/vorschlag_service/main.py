@@ -11,6 +11,7 @@ app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
+
 def get_db():
     db = SessionLocal()
     try:
@@ -18,9 +19,11 @@ def get_db():
     finally:
         db.close()
 
+
 @app.get("/api/vorschlaege")
 def get_vorschlaege(db: Session = Depends(get_db)):
-    rezepte = db.query(Rezept).options(joinedload(Rezept.rezept_zutaten).joinedload(RezeptZutat.zutat)).all()
+    rezepte = db.query(Rezept).options(joinedload(
+        Rezept.rezept_zutaten).joinedload(RezeptZutat.zutat)).all()
     vorrat = db.query(Vorrat).options(joinedload(Vorrat.zutat)).all()
 
     # Map: zutat_id -> gesamte vorhandene Menge
@@ -57,7 +60,8 @@ def get_vorschlaege(db: Session = Depends(get_db)):
                 })
             else:
                 moegliche_portionen = vorhandene_menge / benoetigte_menge
-                portionen_moeglich = min(portionen_moeglich, moegliche_portionen)
+                portionen_moeglich = min(
+                    portionen_moeglich, moegliche_portionen)
 
                 if vorhandene_menge < benoetigte_menge:
                     fehlende.append({

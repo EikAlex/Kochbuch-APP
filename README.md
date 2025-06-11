@@ -97,8 +97,6 @@ Cocking-App/
 ├── .env                       ← API-Keys, DB-URL, Secrets
 ├── LICENSE
 └── README.md
-
-
 ```
 ---
 ## 1. Klone das Repository

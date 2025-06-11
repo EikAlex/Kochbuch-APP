@@ -11,6 +11,7 @@ app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
+
 def get_db():
     db = SessionLocal()
     try:
@@ -19,6 +20,8 @@ def get_db():
         db.close()
 
 # Pydantic Schemas
+
+
 class VorratInput(BaseModel):
     name: str
     menge: int
@@ -26,9 +29,11 @@ class VorratInput(BaseModel):
     haltbar_bis: str
     mindestbestand: int = 0
 
+
 class VorratUpdate(BaseModel):
     menge: int
     mindestbestand: int = 0
+
 
 @app.get("/api/vorrat")
 def list_vorrat(db: Session = Depends(get_db)):
@@ -41,6 +46,7 @@ def list_vorrat(db: Session = Depends(get_db)):
         "haltbar_bis": v.haltbar_bis.isoformat() if v.haltbar_bis else None,
         "mindestbestand": v.mindestbestand
     } for v in vorrat]
+
 
 @app.post("/api/vorrat")
 def add_zutat_eintrag(vorrat: VorratInput, db: Session = Depends(get_db)):
@@ -72,6 +78,7 @@ def add_zutat_eintrag(vorrat: VorratInput, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "ok", "id": neues.id}
 
+
 @app.put("/api/vorrat/{vorrat_id}")
 def update_vorrat(vorrat_id: int, update: VorratUpdate, db: Session = Depends(get_db)):
     eintrag = db.query(Vorrat).get(vorrat_id)
@@ -83,6 +90,7 @@ def update_vorrat(vorrat_id: int, update: VorratUpdate, db: Session = Depends(ge
     db.commit()
     return {"status": "ok", "id": eintrag.id, "menge": eintrag.menge}
 
+
 @app.delete("/api/vorrat/{vorrat_id}")
 def delete_vorrat(vorrat_id: int, db: Session = Depends(get_db)):
     eintrag = db.query(Vorrat).get(vorrat_id)
@@ -92,15 +100,18 @@ def delete_vorrat(vorrat_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "ok", "message": f"Eintrag {vorrat_id} gelöscht"}
 
+
 @app.get("/api/zutaten/namen")
 def get_zutaten_namen(db: Session = Depends(get_db)):
     zutaten = db.query(Zutat).order_by(Zutat.name).all()
     return [z.name for z in zutaten]
 
+
 @app.get("/api/zutaten/einheiten")
 def get_einheiten(db: Session = Depends(get_db)):
     einheiten = db.query(Zutat.einheit).distinct().all()
     return [e[0] for e in einheiten if e[0]]
+
 
 @app.delete("/api/zutaten/{name}")
 def delete_zutat(name: str, db: Session = Depends(get_db)):

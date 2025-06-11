@@ -18,19 +18,23 @@ def render():
         for rezept in vorschlaege:
             with st.expander(rezept["rezept"]):
                 if rezept["portionen_moeglich"] >= 1:
-                    st.success(f"✅ Du kannst ca. {rezept['portionen_moeglich']} Portion(en) kochen")
+                    st.success(
+                        f"✅ Du kannst ca. {rezept['portionen_moeglich']} Portion(en) kochen")
                 else:
-                    st.warning("⚠️ Du hast nicht genug Vorrat für eine Portion.")
+                    st.warning(
+                        "⚠️ Du hast nicht genug Vorrat für eine Portion.")
 
                 if rezept.get("fehlende"):
                     st.markdown("**Fehlende Zutaten:**")
                     for fehl in rezept["fehlende"]:
-                        st.write(f"- {fehl['fehlt']:.2f} {fehl['einheit']} {fehl['name']}")
+                        st.write(
+                            f"- {fehl['fehlt']:.2f} {fehl['einheit']} {fehl['name']}")
 
                 if rezept.get("zutaten"):
                     st.markdown("**Zutatenübersicht pro Portion:**")
                     for z in rezept["zutaten"]:
-                        st.write(f"- {z['menge']} {z['einheit']} {z['name']} --  (🧺 Vorrat: {z['vorrat']} {z['einheit']})")
+                        st.write(
+                            f"- {z['menge']} {z['einheit']} {z['name']} --  (🧺 Vorrat: {z['vorrat']} {z['einheit']})")
 
     except Exception as e:
         st.error(f"❌ Fehler beim Abrufen der Vorschläge: {e}")

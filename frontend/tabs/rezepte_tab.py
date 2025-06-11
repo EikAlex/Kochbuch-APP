@@ -17,7 +17,8 @@ def render():
         with st.form("rezept_start_form"):
             rezeptname = st.text_input("Rezeptname")
             beschreibung = st.text_area("Beschreibung")
-            portionen = st.number_input("Anzahl Portionen", min_value=1, value=1, step=1)
+            portionen = st.number_input(
+                "Anzahl Portionen", min_value=1, value=1, step=1)
             weiter = st.form_submit_button("➡️ Zutaten wählen")
 
             if weiter and rezeptname and portionen:
@@ -28,12 +29,14 @@ def render():
                 st.rerun()
 
     elif st.session_state.rezept_phase == "zutaten":
-        st.markdown(f"**Rezept:** {st.session_state.rezeptname} für {st.session_state.portionen} Portion(en)")
+        st.markdown(
+            f"**Rezept:** {st.session_state.rezeptname} für {st.session_state.portionen} Portion(en)")
 
         try:
             zutaten_response = requests.get(f"{ZUTATEN_API}").json()
             zutaten_ids = [z['id'] for z in zutaten_response]
-            zutaten_namen = [f"{z['name']} ({z['einheit']})" for z in zutaten_response]
+            zutaten_namen = [
+                f"{z['name']} ({z['einheit']})" for z in zutaten_response]
         except:
             zutaten_ids = []
             zutaten_namen = []
@@ -41,7 +44,8 @@ def render():
         with st.form("zutat_hinzufuegen_form"):
             zutat_id = st.selectbox("Zutat auswählen", zutaten_ids,
                                     format_func=lambda x: zutaten_namen[zutaten_ids.index(x)])
-            menge = st.number_input("Menge für **1 Portion**", min_value=0.0, step=0.1)
+            menge = st.number_input(
+                "Menge für **1 Portion**", min_value=0.0, step=0.1)
             hinzufuegen = st.form_submit_button("➕ Zutat hinzufügen")
 
             if hinzufuegen and menge > 0:
@@ -55,10 +59,12 @@ def render():
         if st.session_state.rezept_zutaten_liste:
             for i, eintrag in enumerate(st.session_state.rezept_zutaten_liste):
                 z = zutaten_response[zutaten_ids.index(eintrag["zutat_id"])]
-                gesamtmenge = eintrag["menge_pro_portion"] * st.session_state.portionen
+                gesamtmenge = eintrag["menge_pro_portion"] * \
+                    st.session_state.portionen
                 col1, col2, col3, col4 = st.columns([4, 2, 3, 1])
                 col1.write(z["name"])
-                col2.write(f"{eintrag['menge_pro_portion']} {z['einheit']} pro Portion")
+                col2.write(
+                    f"{eintrag['menge_pro_portion']} {z['einheit']} pro Portion")
                 col3.write(f"{gesamtmenge} {z['einheit']} gesamt")
                 if col4.button("❌", key=f"del_zutat_{i}"):
                     st.session_state.rezept_zutaten_liste.pop(i)
@@ -103,7 +109,8 @@ def render():
             st.markdown("**Zutaten:**")
             for rz in rezept["zutaten"]:
                 berechnete_menge = rz["menge"] * portionen_input
-                st.write(f"- {berechnete_menge} {rz['einheit']} {rz['zutat_name']}")
+                st.write(
+                    f"- {berechnete_menge} {rz['einheit']} {rz['zutat_name']}")
 
             if st.button("🗑️ Löschen", key=f"delete_{rezept['id']}_{i}"):
                 res = requests.delete(f"{API_BASE}/{rezept['id']}")

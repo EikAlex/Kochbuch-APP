@@ -12,6 +12,7 @@ app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
+
 def get_db():
     db = SessionLocal()
     try:
@@ -20,14 +21,18 @@ def get_db():
         db.close()
 
 # Pydantic Schema
+
+
 class RezeptZutatInput(BaseModel):
     zutat_id: int
     menge: float
+
 
 class RezeptInput(BaseModel):
     name: str
     beschreibung: str = ""
     zutaten: List[RezeptZutatInput]
+
 
 @app.get("/api/rezepte")
 def list_rezepte(db: Session = Depends(get_db)):
@@ -49,13 +54,17 @@ def list_rezepte(db: Session = Depends(get_db)):
         })
     return result
 
+
 @app.post("/api/rezepte")
 def add_rezept(rezept_input: RezeptInput, db: Session = Depends(get_db)):
-    existing = db.query(Rezept).filter(Rezept.name == rezept_input.name).first()
+    existing = db.query(Rezept).filter(
+        Rezept.name == rezept_input.name).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Rezeptname existiert bereits")
+        raise HTTPException(
+            status_code=400, detail="Rezeptname existiert bereits")
 
-    rezept = Rezept(name=rezept_input.name, beschreibung=rezept_input.beschreibung)
+    rezept = Rezept(name=rezept_input.name,
+                    beschreibung=rezept_input.beschreibung)
     db.add(rezept)
     db.commit()
     db.refresh(rezept)
@@ -70,6 +79,7 @@ def add_rezept(rezept_input: RezeptInput, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "ok", "id": rezept.id}
 
+
 @app.delete("/api/rezepte/{rezept_id}")
 def delete_rezept(rezept_id: int, db: Session = Depends(get_db)):
     rezept = db.query(Rezept).get(rezept_id)
@@ -80,6 +90,7 @@ def delete_rezept(rezept_id: int, db: Session = Depends(get_db)):
     db.delete(rezept)
     db.commit()
     return {"status": "ok", "message": f"Rezept {rezept.name} gelöscht"}
+
 
 @app.get("/api/zutaten")
 def get_zutaten(db: Session = Depends(get_db)):

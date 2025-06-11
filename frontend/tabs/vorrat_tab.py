@@ -5,21 +5,26 @@ import requests
 API_BASE = "http://localhost:5001/api/vorrat"
 ZUTATEN_API = "http://localhost:5001/api/zutaten"
 
+
 def render():
     st.subheader("📥 Vorrat verwalten")
 
-    action = st.radio("Wähle eine Aktion", ("Zutat hinzufügen", "Zutat löschen"))
+    action = st.radio("Wähle eine Aktion",
+                      ("Zutat hinzufügen", "Zutat löschen"))
 
     if action == "Zutat hinzufügen":
         with st.form("vorrat_form"):
             try:
-                vorhandene_zutaten = requests.get(f"{ZUTATEN_API}/namen").json()
+                vorhandene_zutaten = requests.get(
+                    f"{ZUTATEN_API}/namen").json()
             except:
                 vorhandene_zutaten = []
 
-            vorschlag = st.selectbox("Vorschlag wählen (optional)", [""] + vorhandene_zutaten, index=0, key="vorschlag")
+            vorschlag = st.selectbox("Vorschlag wählen (optional)", [
+                                     ""] + vorhandene_zutaten, index=0, key="vorschlag")
 
-            name = st.text_input("Zutat eingeben", value=st.session_state.get("vorschlag", ""), key="zutat_input")
+            name = st.text_input("Zutat eingeben", value=st.session_state.get(
+                "vorschlag", ""), key="zutat_input")
 
             try:
                 einheiten = requests.get(f"{ZUTATEN_API}/einheiten").json()
@@ -27,9 +32,12 @@ def render():
                 einheiten = ["Stück", "g", "ml"]
 
             einheit = st.selectbox("Einheit", einheiten, key="einheit_input")
-            menge = st.number_input("Menge", min_value=1, step=1, key="menge_input")
-            haltbar_bis = st.date_input("Haltbar bis", value=datetime.date.today(), key="mhd_input")
-            mindestbestand = st.number_input("📜 Optional: Mindestbestand", min_value=0, step=1, value=0, key="mb_input")
+            menge = st.number_input(
+                "Menge", min_value=1, step=1, key="menge_input")
+            haltbar_bis = st.date_input(
+                "Haltbar bis", value=datetime.date.today(), key="mhd_input")
+            mindestbestand = st.number_input(
+                "📜 Optional: Mindestbestand", min_value=0, step=1, value=0, key="mb_input")
 
             submitted = st.form_submit_button("Hinzufügen")
 
@@ -56,7 +64,8 @@ def render():
         except:
             zutaten_liste = []
 
-        zutat_to_delete = st.selectbox("Wähle eine Zutat zum Löschen", zutaten_liste)
+        zutat_to_delete = st.selectbox(
+            "Wähle eine Zutat zum Löschen", zutaten_liste)
 
         if zutat_to_delete:
             if st.button(f"❌ {zutat_to_delete} löschen"):

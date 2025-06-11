@@ -11,5 +11,5 @@ class Vorrat(Base):
     menge = Column(Integer, nullable=False)
     haltbar_bis = Column(Date)
     mindestbestand = Column(Integer, nullable=True)
-    
+
     zutat = relationship("Zutat")
