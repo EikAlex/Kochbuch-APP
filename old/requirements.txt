@@ -1,0 +1,10 @@
+streamlit
+sqlalchemy
+psycopg2-binary
+requests
+pandas
+openai
+easyocr
+numpy
+Pillow
+bs4

@@ -1,0 +1,41 @@
+
+services:
+  # PostgreSQL-Datenbank-Container
+  db:
+    image: postgres:15  # Benutze das Postgres 15 Docker-Image
+    environment:
+      POSTGRES_USER: postgres   # Benutzername für PostgreSQL
+      POSTGRES_PASSWORD: example  # Passwort für den Benutzer
+      POSTGRES_DB: cooking_db   # Name der zu erstellenden Datenbank
+    ports:
+      - "5432:5432"  # Portweiterleitung für die Datenbank
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # Persistente Daten für die DB, damit sie auch bei Container-Neustart erhalten bleiben
+    networks:
+      - cooking_network  # Füge das Netzwerk hinzu
+
+  # Web-Container für die Streamlit App
+  web:
+    build: 
+      context: ./app  # Aktuelles Verzeichnis, wo sich die Dockerfile befindet
+    ports:
+      - "8501:8501"  # Portweiterleitung für Streamlit
+    depends_on:
+      - db  # Stellt sicher, dass der Web-Container nach der DB gestartet wird
+    command: sh -c "/wait-for-it.sh db:5432 -- python init_db.py && streamlit run main.py"
+    volumes:
+      - ./app:/app # Bindet das lokale Projektverzeichnis ins Docker-Containerverzeichnis ein
+    environment:
+      POSTGRES_USER: postgres   # Benutzername für PostgreSQL
+      POSTGRES_PASSWORD: example  # Passwort für den Benutzer
+      POSTGRES_DB: cooking_db
+      DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
+    networks:
+      - cooking_network  # Füge das Netzwerk hinzu
+volumes:
+  pgdata:  # Definiert ein Docker-Volume für persistente Daten
+
+
+networks:
+  cooking_network:
+    driver: bridge  # Erstelle ein benutzerdefiniertes Netzwerk
