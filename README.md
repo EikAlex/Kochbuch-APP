@@ -1,4 +1,4 @@
-# 🥘 Digitale Kochbuch-App mit integrierter Vorratsverwaltung
+# 🥘 Digitale Kochbuch-App mit integrierter Vorratsverwaltung und REST-API Services
 
 Willkommen bei deiner digitalen Kochbuch-App!  
 Diese Anwendung basiert jetzt auf einer **vollständig REST-API-basierten Microservice-Architektur**, realisiert mit **FastAPI** und **Pydantic**. Jeder Tab der App läuft als eigenständiger Microservice in einem separaten Docker-Container, was die Wartbarkeit erheblich verbessert und die Fehlertoleranz steigert.
@@ -52,6 +52,7 @@ Verwalte deine Küche einfach, modern und effizient – entdecke, plane und orga
 Cocking-App/
 ├── frontend/                   ← Streamlit UI
 │   ├── app.py                  ← Hauptseite mit Tabs
+│   ├── Dockerfile
 │   └── tabs/
 │       ├── vorrat_tab.py       ← REST-basierter Tab (spricht Service)
 │       ├── rezepte_tab.py
@@ -59,8 +60,6 @@ Cocking-App/
 │       ├── einkaufsliste_tab.py
 │       └── import_tab.py
 │ 
-├── scripts
-│   └── wit-for-it.sh
 │
 ├── services/                   ← Jeder Dienst ist ein Microservice
 │   ├── vorrat_service/
@@ -84,14 +83,17 @@ Cocking-App/
 │   ├── templates.txt
 │   └── util.py
 |
-├── shared/                    ← geteilte SQLAlchemy-Modelle
-│   └── db_models/
-│       ├── base.py
-│       ├── einkaufsliste.py
-│       ├── rezept_zutat.py
-│       ├── rezept.py
-│       ├── vorrat.py
-│       └── zutat.py
+├── shared/                    ← geteilte SQLAlchemy-Modelle und Skrips
+│   ├── db_models/
+│   │   ├── base.py
+│   │   ├── einkaufsliste.py
+│   │   ├── rezept_zutat.py
+│   │   ├── rezept.py
+│   │   ├── vorrat.py
+│   │   └── zutat.py
+│   └── scripts
+│       └── wit-for-it.sh
+
 │
 ├── docker-compose.yml         ← Zum Hochfahren aller Services + DB  
 ├── .env                       ← API-Keys, DB-URL, Secrets
@@ -99,6 +101,7 @@ Cocking-App/
 ├── LICENSE
 └── README.md
 ```
+
 ---
 ## 🐳 Deployment mit Docker: Microservice-Architektur & Netzwerk
 
