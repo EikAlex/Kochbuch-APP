@@ -82,7 +82,7 @@ Cocking-App/
 │   ├── requirements.txt
 │   ├── templates.txt
 │   └── util.py
-|
+│
 ├── shared/                    ← geteilte SQLAlchemy-Modelle und Skrips
 │   ├── db_models/
 │   │   ├── base.py
@@ -93,7 +93,6 @@ Cocking-App/
 │   │   └── zutat.py
 │   └── scripts
 │       └── wit-for-it.sh
-
 │
 ├── docker-compose.yml         ← Zum Hochfahren aller Services + DB  
 ├── .env                       ← API-Keys, DB-URL, Secrets
