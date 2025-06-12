@@ -100,6 +100,75 @@ Cocking-App/
 └── README.md
 ```
 ---
+## 🐳 Deployment mit Docker: Microservice-Architektur & Netzwerk
+
+Diese Anwendung verwendet eine **Microservice-Architektur**, bei der jede Komponente (Frontend und Backend-Services) in einem eigenen **Docker-Container** läuft. Alle Container sind über ein gemeinsames Docker-Netzwerk verbunden, was die interne Kommunikation stabil und sicher macht.
+
+---
+
+### 📦 Services als Container
+
+Jede der folgenden Komponenten wird in einem separaten Container betrieben:
+
+| Service                  | Beschreibung                                 |
+|--------------------------|----------------------------------------------|
+| `frontend`               | Streamlit-UI mit Tabs für die Webanwendung   |
+| `vorrat_service`         | FastAPI-Service für Vorratsverwaltung        |
+| `rezepte_service`        | FastAPI-Service für Rezepteverwaltung        |
+| `vorschlag_service`      | FastAPI-Service für Rezeptvorschläge         |
+| `einkaufsliste_service`  | FastAPI-Service für Einkaufsliste            |
+| `import_service`         | FastAPI-Service zum Datenimport              |
+| `postgres`               | PostgreSQL-Datenbank für alle Services       |
+
+---
+
+### 🔗 Gemeinsames Docker-Netzwerk
+
+Alle Services sind über ein benutzerdefiniertes Docker-Netzwerk (z. B. `app_net`) miteinander verbunden:
+
+- Ermöglicht **sichere Kommunikation** zwischen Containern
+- **DNS-basiertes Service-Discovery** (`http://rezepte_service:8000`)
+- Kein externer Zugriff nötig – alles bleibt **intern und isoliert**
+
+
+## ✅ Vorteile der Docker-basierten Microservice-Architektur
+
+Die gewählte Architektur bringt zahlreiche Vorteile für Entwicklung, Deployment und Betrieb:
+
+### 🔄 Skalierbarkeit
+- Jeder Microservice kann **unabhängig skaliert** werden – horizontal (mehr Instanzen) oder vertikal (mehr Ressourcen).
+- Ermöglicht eine **bedarfsorientierte Ressourcenverteilung** bei hoher Last (z. B. mehr Vorschlagsdienste bei komplexer Logik).
+
+### 🌍 Verteilbarkeit
+- Jeder Service kann theoretisch auf einem **eigenen Server** oder **in der Cloud** betrieben werden.
+- Bereit für **Docker Swarm**, **Kubernetes** oder andere Orchestrierungsplattformen.
+- Erleichtert den **globalen Betrieb** durch georedundante Verteilung.
+
+### 🔗 Isolation & Unabhängigkeit
+- Services sind voneinander isoliert – Fehler in einem Service wirken sich nicht direkt auf andere aus.
+- Unabhängiges **Entwickeln, Testen, Deployen** möglich.
+
+### 🧩 Modularität & Wartbarkeit
+- Die Anwendung ist in **logisch getrennte Komponenten** gegliedert.
+- Neue Funktionen lassen sich als eigenständige Services integrieren.
+- Änderungen in einem Bereich erfordern **keine Anpassungen an anderen** Services.
+
+### 🧪 Einheitliche Umgebung
+- Alle Services laufen in **identisch definierten Containern** – auf jedem System gleich.
+- Verhindert „It works on my machine“-Probleme.
+- Vereinfachtes Onboarding für neue Entwickler.
+
+### 🔐 Sicherheit & Netzwerktrennung
+- Kommunikation erfolgt nur über das **interne Docker-Netzwerk**.
+- Kein unnötiger Zugriff von außen auf interne APIs.
+- Dienste können gezielt nach außen freigegeben oder abgeschottet werden.
+
+---
+
+Diese Architektur ist eine robuste Grundlage für **wachstumsfähige**, **wartbare** und **zukunftssichere** Webanwendungen.
+
+---
+
 ## 1. Klone das Repository
 git clone https://github.com/EikAlex/Cocking-App.git
 
@@ -127,10 +196,10 @@ eine datei mit API-Key angelgt werden.
 [openai]
 openai_api_key = "sk -xxxxxxxxx"
 ```
-
-### Diagramme und FlowChars
 ---
-## Architekturdiagramm/Komponentendiagramm
+## Diagramme 
+---
+### Architekturdiagramm/Komponentendiagramm
 ```mermaid
 graph TD
     subgraph Frontend
@@ -180,7 +249,7 @@ graph TD
 
 ```
 ---
-## Sequenz-Diagramm
+### Sequenz-Diagramm
 ```mermaid
 sequenceDiagram
     participant User
@@ -228,6 +297,86 @@ sequenceDiagram
         ImportService-->>Frontend: Antwort
     end
 ```
+---
+### Klassen-Diagramm
+```mermaid
+classDiagram
+    class Zutat {
+        +int id
+        +str name
+        +str einheit
+    }
+
+    class Rezept {
+        +int id
+        +str name
+        +str beschreibung
+    }
+
+    class RezeptZutat {
+        +int rezept_id
+        +int zutat_id
+        +int menge
+    }
+
+    class Vorrat {
+        +int id
+        +int zutat_id
+        +int menge
+        +date haltbar_bis
+        +int mindestbestand
+    }
+
+    class Einkaufsliste {
+        +int id
+        +int zutat_id
+        +int menge
+    }
+
+    %% Beziehungen
+    Rezept --> RezeptZutat : rezept_zutaten
+    Zutat --> RezeptZutat : rezept_zutaten
+    RezeptZutat --> Rezept : rezept
+    RezeptZutat --> Zutat : zutat
+
+    Zutat --> Vorrat : vorrat
+    Zutat --> Einkaufsliste : einkaufsliste
+```
+---
+###  Deployment-Diagramm (Docker-Architektur)
+
+```mermaid
+graph TD
+    subgraph Client
+        Browser[Benutzer-Browser]
+    end
+
+    subgraph DockerHost
+        Streamlit[Frontend: Streamlit-App Container]
+
+        Vorrat[Vorrat-Service Container]
+        Rezepte[Rezepte-Service Container]
+        Vorschlag[Vorschlag-Service Container]
+        Einkaufsliste[Einkaufsliste-Service Container]
+        Import[Import-Service Container]
+
+        Postgres[(PostgreSQL-Datenbank)]
+    end
+
+    Browser -->|HTTP| Streamlit
+
+    Streamlit -->|REST| Vorrat
+    Streamlit -->|REST| Rezepte
+    Streamlit -->|REST| Vorschlag
+    Streamlit -->|REST| Einkaufsliste
+    Streamlit -->|REST| Import
+
+    Vorrat --> Postgres
+    Rezepte --> Postgres
+    Vorschlag --> Postgres
+    Einkaufsliste --> Postgres
+    Import --> Postgres
+```
 
 ---
-### Erstellt von Alexander Schmal für die Abgabe des Mobile Applikationen Moduls 
+## Erstellt von Alexander Schmal für die Abgabe des Mobile Applikationen Moduls 
