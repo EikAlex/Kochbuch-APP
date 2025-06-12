@@ -17,7 +17,7 @@ services:
   # Web-Container für die Streamlit App
   web:
     build: 
-      context: ./app  # Aktuelles Verzeichnis, wo sich die Dockerfile befindet
+      context: ./frontend  # Aktuelles Verzeichnis, wo sich die Dockerfile befindet
     ports:
       - "8501:8501"  # Portweiterleitung für Streamlit
     depends_on:

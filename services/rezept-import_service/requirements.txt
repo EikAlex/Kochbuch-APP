@@ -1,5 +1,7 @@
 fastapi
-uvicorn
-sqlalchemy
-pydantic
+uvicorn[standard]
+openai>=1.0.0
+SQLAlchemy
+psycopg2-binary
 python-dotenv
+pydantic

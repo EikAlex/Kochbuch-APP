@@ -95,6 +95,7 @@ Cocking-App/
 │
 ├── docker-compose.yml         ← Zum Hochfahren aller Services + DB  
 ├── .env                       ← API-Keys, DB-URL, Secrets
+├── secrets.toml               ← API-Key für OpenAI
 ├── LICENSE
 └── README.md
 ```
@@ -127,13 +128,14 @@ eine datei mit API-Key angelgt werden.
 openai_api_key = "sk -xxxxxxxxx"
 ```
 
-
+### Diagramme und FlowChars
 ---
-### Erstellt von Alexander Schmal für die Abgabe des Mobile Applikationen Moduls 
-
+## Architekturdiagramm/Komponentendiagramm
+```mermaid
 graph TD
-    subgraph Frontend [Frontend - Streamlit UI]
-        A1[app.py (Tabs)]
+    subgraph Frontend
+        direction TB
+        A1["app.py (Tabs)"]
         A2[vorrat_tab.py]
         A3[rezepte_tab.py]
         A4[vorschlag_tab.py]
@@ -141,7 +143,8 @@ graph TD
         A6[import_tab.py]
     end
 
-    subgraph Backend [Backend - Microservices (FastAPI)]
+    subgraph Backend
+        direction TB
         B1[vorrat_service]
         B2[rezepte_service]
         B3[vorschlag_service]
@@ -149,9 +152,10 @@ graph TD
         B5[import_service]
     end
 
-    subgraph Shared [Gemeinsame Komponenten]
+    subgraph Shared
+        direction TB
         C1[PostgreSQL-Datenbank]
-        C2[shared/db_models (SQLAlchemy)]
+        C2["shared/db_models (SQLAlchemy)"]
     end
 
     %% Verbindungen Frontend zu Backend
@@ -173,3 +177,57 @@ graph TD
     B3 --> C2
     B4 --> C2
     B5 --> C2
+
+```
+---
+## Sequenz-Diagramm
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend as Streamlit UI
+    participant VorratService as Vorrat Service (FastAPI)
+    participant RezepteService as Rezepte Service (FastAPI)
+    participant VorschlagService as Vorschlag Service (FastAPI)
+    participant EinkaufslisteService as Einkaufsliste Service (FastAPI)
+    participant ImportService as Import Service (FastAPI)
+    participant DB as PostgreSQL + Shared Models
+
+    User->>Frontend: Öffnet App / Wechselt Tab
+    alt Vorrat Tab
+        Frontend->>VorratService: REST API Anfrage
+        VorratService->>DB: Daten abfragen/aktualisieren
+        DB-->>VorratService: Daten zurück
+        VorratService-->>Frontend: Antwort
+    end
+
+    alt Rezepte Tab
+        Frontend->>RezepteService: REST API Anfrage
+        RezepteService->>DB: Daten abfragen/aktualisieren
+        DB-->>RezepteService: Daten zurück
+        RezepteService-->>Frontend: Antwort
+    end
+
+    alt Vorschlag Tab
+        Frontend->>VorschlagService: REST API Anfrage
+        VorschlagService->>DB: Daten abfragen/aktualisieren
+        DB-->>VorschlagService: Daten zurück
+        VorschlagService-->>Frontend: Antwort
+    end
+
+    alt Einkaufsliste Tab
+        Frontend->>EinkaufslisteService: REST API Anfrage
+        EinkaufslisteService->>DB: Daten abfragen/aktualisieren
+        DB-->>EinkaufslisteService: Daten zurück
+        EinkaufslisteService-->>Frontend: Antwort
+    end
+
+    alt Import Tab
+        Frontend->>ImportService: REST API Anfrage
+        ImportService->>DB: Daten abfragen/aktualisieren
+        DB-->>ImportService: Daten zurück
+        ImportService-->>Frontend: Antwort
+    end
+```
+
+---
+### Erstellt von Alexander Schmal für die Abgabe des Mobile Applikationen Moduls 
