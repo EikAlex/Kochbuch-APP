@@ -4,7 +4,7 @@ from shared.db_models.base import Base
 from shared.db_models.einkaufsliste import Einkaufsliste
 from shared.db_models.vorrat import Vorrat
 from shared.db_models.zutat import Zutat
-from database import engine, SessionLocal
+from shared.database import engine, SessionLocal  # Zugriff auf shared/database
 from pydantic import BaseModel
 from typing import List
 

@@ -1,41 +1,95 @@
+version: "3.9"
 
 services:
   # PostgreSQL-Datenbank-Container
   db:
-    image: postgres:15  # Benutze das Postgres 15 Docker-Image
+    image: postgres:15
     environment:
-      POSTGRES_USER: postgres   # Benutzername für PostgreSQL
-      POSTGRES_PASSWORD: example  # Passwort für den Benutzer
-      POSTGRES_DB: cooking_db   # Name der zu erstellenden Datenbank
-    ports:
-      - "5432:5432"  # Portweiterleitung für die Datenbank
-    volumes:
-      - pgdata:/var/lib/postgresql/data  # Persistente Daten für die DB, damit sie auch bei Container-Neustart erhalten bleiben
-    networks:
-      - cooking_network  # Füge das Netzwerk hinzu
-
-  # Web-Container für die Streamlit App
-  web:
-    build: 
-      context: ./frontend  # Aktuelles Verzeichnis, wo sich die Dockerfile befindet
-    ports:
-      - "8501:8501"  # Portweiterleitung für Streamlit
-    depends_on:
-      - db  # Stellt sicher, dass der Web-Container nach der DB gestartet wird
-    command: sh -c "/wait-for-it.sh db:5432 -- python init_db.py && streamlit run main.py"
-    volumes:
-      - ./app:/app # Bindet das lokale Projektverzeichnis ins Docker-Containerverzeichnis ein
-    environment:
-      POSTGRES_USER: postgres   # Benutzername für PostgreSQL
-      POSTGRES_PASSWORD: example  # Passwort für den Benutzer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
       POSTGRES_DB: cooking_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - cooking_network
+
+  # Frontend: Streamlit App
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8501:8501"
+    depends_on:
+      - db
+    command: sh -c "/wait-for-it.sh db:5432 -- streamlit run app.py"
+    volumes:
+      - ./frontend:/frontend
+    environment:
       DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
     networks:
-      - cooking_network  # Füge das Netzwerk hinzu
-volumes:
-  pgdata:  # Definiert ein Docker-Volume für persistente Daten
+      - cooking_network
 
+  # Vorrat-Service
+  vorrat_service:
+    build:
+      context: ./services/vorrat_service
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
+    networks:
+      - cooking_network
+
+  # Rezepte-Service
+  rezepte_service:
+    build:
+      context: ./services/rezepte_service
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
+    networks:
+      - cooking_network
+
+  # Vorschlag-Service
+  vorschlag_service:
+    build:
+      context: ./services/vorschlag_service
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
+    networks:
+      - cooking_network
+
+  # Einkaufsliste-Service
+  einkaufsliste_service:
+    build:
+      context: ./services/einkaufsliste
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
+    networks:
+      - cooking_network
+
+  # Import-Service
+  import_service:
+    build:
+      context: ./services/import_service
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"  # API-Key aus .env-Datei
+    networks:
+      - cooking_network
+
+volumes:
+  pgdata:
 
 networks:
   cooking_network:
-    driver: bridge  # Erstelle ein benutzerdefiniertes Netzwerk
+    driver: bridge

@@ -4,7 +4,7 @@ from shared.db_models.base import Base
 from shared.db_models.rezept import Rezept
 from shared.db_models.rezept_zutat import RezeptZutat
 from shared.db_models.zutat import Zutat
-from database import engine, SessionLocal
+from shared.database import SessionLocal, Base
 from pydantic import BaseModel
 from typing import List
 

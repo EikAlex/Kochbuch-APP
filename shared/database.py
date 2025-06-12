@@ -1,7 +1,6 @@
-# services/vorrat_service/database.py
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from shared.config import DATABASE_URL  # Import der zentralen Konfiguration
+from shared.config import DATABASE_URL  # Zentrale Konfiguration
 
 engine = create_engine(DATABASE_URL, connect_args={
                        "check_same_thread": False} if "sqlite" in DATABASE_URL else {})

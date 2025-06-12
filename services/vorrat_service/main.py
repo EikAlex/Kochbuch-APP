@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from shared.db_models.base import Base
 from shared.db_models.zutat import Zutat
 from shared.db_models.vorrat import Vorrat
-from database import engine, SessionLocal
+from shared.database import engine, SessionLocal  # Zugriff auf shared/database
 from pydantic import BaseModel
 import datetime
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
-from database import get_db, engine
+from shared.database import get_db, engine  # Zugriff auf shared/database
 from shared.db_models.base import Base
 from shared.db_models.zutat import Zutat
 from shared.db_models.rezept import Rezept, RezeptZutat

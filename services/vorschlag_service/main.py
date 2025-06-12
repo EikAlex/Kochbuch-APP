@@ -5,7 +5,7 @@ from shared.db_models.rezept import Rezept
 from shared.db_models.vorrat import Vorrat
 from shared.db_models.zutat import Zutat
 from shared.db_models.rezept_zutat import RezeptZutat
-from database import engine, SessionLocal
+from shared.database import engine, SessionLocal  # Zugriff auf shared/database
 
 app = FastAPI()
 
