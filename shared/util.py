@@ -1,7 +1,5 @@
-import streamlit as st
 from datetime import datetime
-from db import SessionLocal, Vorrat
-from models import Vorrat, Zutat, Rezept, RezeptZutat
+from shared.db_models import Vorrat, Zutat, Rezept, RezeptZutat
 
 # Liste mit Standard-Einheiten
 defaul_einheit = [

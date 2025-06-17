@@ -1,23 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-from shared.db_models.base import Base
-from shared.db_models.zutat import Zutat
-from shared.db_models.vorrat import Vorrat
-from shared.database import engine, SessionLocal  # Zugriff auf shared/database
+from shared.db_models import Base, Vorrat, Zutat
+from shared.database import engine, SessionLocal, get_db  # Zugriff auf shared/database
 from pydantic import BaseModel
 import datetime
+from typing import List, Optional
 
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # Pydantic Schemas
 
@@ -35,9 +26,22 @@ class VorratUpdate(BaseModel):
     mindestbestand: int = 0
 
 
-@app.get("/api/vorrat")
+class VorratResponse(BaseModel):
+    id: int
+    name: str
+    einheit: str
+    menge: int
+    haltbar_bis: Optional[datetime.date] # Use date directly
+    mindestbestand: Optional[int]
+
+    class Config:
+        orm_mode = True # If returning ORM objects directly
+
+
+@app.get("/api/vorrat", response_model=List[VorratResponse])
 def list_vorrat(db: Session = Depends(get_db)):
-    vorrat = db.query(Vorrat).join(Zutat).all()
+    vorrat_items = db.query(Vorrat).join(Zutat).all()
+    # If not using orm_mode, manually map:
     return [{
         "id": v.id,
         "name": v.zutat.name,
@@ -45,7 +49,7 @@ def list_vorrat(db: Session = Depends(get_db)):
         "menge": v.menge,
         "haltbar_bis": v.haltbar_bis.isoformat() if v.haltbar_bis else None,
         "mindestbestand": v.mindestbestand
-    } for v in vorrat]
+    } for v in vorrat_items]
 
 
 @app.post("/api/vorrat")

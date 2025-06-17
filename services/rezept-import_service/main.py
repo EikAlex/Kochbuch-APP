@@ -1,9 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy.orm import Session
 from shared.database import get_db, engine  # Zugriff auf shared/database
-from shared.db_models.base import Base
-from shared.db_models.zutat import Zutat
-from shared.db_models.rezept import Rezept, RezeptZutat
+from shared.db_models import Base, Zutat, Rezept, RezeptZutat
 from llm_core import extrahiere_rezept_daten
 from pydantic import BaseModel
 

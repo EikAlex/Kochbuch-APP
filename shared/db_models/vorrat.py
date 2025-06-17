@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey, Date
 from sqlalchemy.orm import relationship
-from shared.db_models.base import Base
+from shared.db_models import Base
 
 
 class Vorrat(Base):
@@ -12,4 +12,4 @@ class Vorrat(Base):
     haltbar_bis = Column(Date)
     mindestbestand = Column(Integer, nullable=True)
 
-    zutat = relationship("Zutat")
+    zutat = relationship("Zutat", back_populates="vorrat")

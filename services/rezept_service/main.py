@@ -1,24 +1,13 @@
 from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy.orm import Session
-from shared.db_models.base import Base
-from shared.db_models.rezept import Rezept
-from shared.db_models.rezept_zutat import RezeptZutat
-from shared.db_models.zutat import Zutat
-from shared.database import SessionLocal, Base
+from sqlalchemy.orm import Session, joinedload
+from shared.db_models import Base, Zutat, Rezept, RezeptZutat
+from shared.database import engine, SessionLocal, get_db  # Zugriff auf shared/database
 from pydantic import BaseModel
 from typing import List
 
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # Pydantic Schema
 
@@ -36,7 +25,9 @@ class RezeptInput(BaseModel):
 
 @app.get("/api/rezepte")
 def list_rezepte(db: Session = Depends(get_db)):
-    rezepte = db.query(Rezept).all()
+    rezepte = db.query(Rezept).options(
+        joinedload(Rezept.rezept_zutaten).joinedload(RezeptZutat.zutat)
+    ).all()
     result = []
     for rezept in rezepte:
         result.append({

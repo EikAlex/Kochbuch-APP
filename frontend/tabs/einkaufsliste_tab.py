@@ -1,8 +1,8 @@
 import streamlit as st
 import requests
 
-API_URL = "http://localhost:5004/api/einkaufsliste"
-ZUTATEN_API = "http://localhost:5001/api/zutaten"
+API_URL = "http://einkaufsliste_service:5004/api/einkaufsliste"
+ZUTATEN_API = "http://vorrat_service:5001/api/zutaten"
 AUTO_URL = f"{API_URL}/auto"
 KAUFEN_ENDPOINT = lambda eid: f"{API_URL}/{eid}/kaufen"
 

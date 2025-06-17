@@ -1,22 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from shared.db_models.base import Base
-from shared.db_models.einkaufsliste import Einkaufsliste
-from shared.db_models.vorrat import Vorrat
-from shared.db_models.zutat import Zutat
-from shared.database import engine, SessionLocal  # Zugriff auf shared/database
+from shared.db_models import Base, Vorrat, Zutat, Einkaufsliste
+from shared.database import engine, SessionLocal, get_db  # Zugriff auf shared/database
 from pydantic import BaseModel
 from typing import List
 
 app = FastAPI()
 Base.metadata.create_all(bind=engine)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 class EinkaufInput(BaseModel):
     zutat_id: int

@@ -1,6 +1,5 @@
 import streamlit as st
-from frontend.tabs import vorschlag_tab
-from tabs import vorrat_tab, rezepte_tab, einkaufsliste_tab, rezept_import_tab
+from tabs import vorschlag_tab, vorrat_tab, rezepte_tab, einkaufsliste_tab, rezept_import_tab
 
 st.set_page_config(page_title="Kochbuch", layout="wide")
 st.title("🥘 Digitale Kochbuch-App")

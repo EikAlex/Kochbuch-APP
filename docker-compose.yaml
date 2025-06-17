@@ -18,14 +18,12 @@ services:
   # Frontend: Streamlit App
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: frontend/Dockerfile
     ports:
       - "8501:8501"
     depends_on:
       - db
-    command: sh -c "/wait-for-it.sh db:5432 -- streamlit run app.py"
-    volumes:
-      - ./frontend:/frontend
     environment:
       DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
     networks:
@@ -34,7 +32,10 @@ services:
   # Vorrat-Service
   vorrat_service:
     build:
-      context: ./services/vorrat_service
+      context: .
+      dockerfile: services/vorrat_service/Dockerfile
+    ports:
+      - "5001:5001"
     depends_on:
       - db
     environment:
@@ -43,9 +44,12 @@ services:
       - cooking_network
 
   # Rezepte-Service
-  rezepte_service:
+  rezept_service:
     build:
-      context: ./services/rezepte_service
+      context: .
+      dockerfile: services/rezept_service/Dockerfile
+    ports:
+      - "5002:5002"
     depends_on:
       - db
     environment:
@@ -56,7 +60,10 @@ services:
   # Vorschlag-Service
   vorschlag_service:
     build:
-      context: ./services/vorschlag_service
+      context: .
+      dockerfile: services/vorschlag_service/Dockerfile
+    ports:
+      - "5003:5003"
     depends_on:
       - db
     environment:
@@ -67,7 +74,10 @@ services:
   # Einkaufsliste-Service
   einkaufsliste_service:
     build:
-      context: ./services/einkaufsliste
+      context: .
+      dockerfile: services/einkaufsliste_service/Dockerfile
+    ports:
+      - "5004:5004"
     depends_on:
       - db
     environment:
@@ -75,15 +85,18 @@ services:
     networks:
       - cooking_network
 
-  # Import-Service
-  import_service:
+  # Rezept-Import-Service
+  rezept_import_service:
     build:
-      context: ./services/import_service
+      context: .
+      dockerfile: services/rezept-import_service/Dockerfile
+    ports:
+      - "5005:5005"
     depends_on:
       - db
     environment:
       DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
-      OPENAI_API_KEY: "${OPENAI_API_KEY}"  # API-Key aus .env-Datei
+      OPENAI_API_KEY: "${openai_api_key}"
     networks:
       - cooking_network
 

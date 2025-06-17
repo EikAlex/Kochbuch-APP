@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, ForeignKey, Date
+from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
-from shared.db_models.base import Base
+from shared.db_models import Base
 
 
 class RezeptZutat(Base):

@@ -1,8 +1,8 @@
 import streamlit as st
 import requests
 
-API_BASE = "http://localhost:5002/api/rezepte"
-ZUTATEN_API = "http://localhost:5001/api/zutaten"
+API_BASE = "http://rezept_service:5002/api/rezepte"
+ZUTATEN_API = "http://vorrat_service:5001/api/zutaten"
 
 
 def render():

@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-API_URL = "http://localhost:5003/api/vorschlaege"
+API_URL = "http://vorschlag_service:5003/api/vorschlaege"
 
 
 def render():
@@ -9,7 +9,9 @@ def render():
 
     # REST-basierte Vorschläge abrufen
     try:
-        vorschlaege = requests.get(API_URL).json()
+        response = requests.get(API_URL)
+        response.raise_for_status()  # Raises an HTTPError for bad responses (4XX or 5XX)
+        vorschlaege = response.json()
 
         if not vorschlaege:
             st.info("Keine Rezepte gefunden.")

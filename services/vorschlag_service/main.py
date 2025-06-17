@@ -5,22 +5,15 @@ from shared.db_models.rezept import Rezept
 from shared.db_models.vorrat import Vorrat
 from shared.db_models.zutat import Zutat
 from shared.db_models.rezept_zutat import RezeptZutat
-from shared.database import engine, SessionLocal  # Zugriff auf shared/database
+# Zugriff auf shared/database
+from shared.database import engine, SessionLocal, get_db
 
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@app.get("/api/vorschlaege")
+@app.get("/api/vorschlag")
 def get_vorschlaege(db: Session = Depends(get_db)):
     rezepte = db.query(Rezept).options(joinedload(
         Rezept.rezept_zutaten).joinedload(RezeptZutat.zutat)).all()

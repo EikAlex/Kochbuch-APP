@@ -2,8 +2,8 @@ import streamlit as st
 import datetime
 import requests
 
-API_BASE = "http://localhost:5001/api/vorrat"
-ZUTATEN_API = "http://localhost:5001/api/zutaten"
+API_BASE = "http://vorrat_service:5001/api/vorrat"
+ZUTATEN_API = "http://vorrat_service:5001/api/zutaten"
 
 
 def render():
