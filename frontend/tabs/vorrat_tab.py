@@ -1,6 +1,7 @@
 import streamlit as st
 import datetime
 import requests
+from shared.util import check_haltbarkeit
 
 API_BASE = "http://vorrat_service:5001/api/vorrat"
 ZUTATEN_API = "http://vorrat_service:5001/api/zutaten"
@@ -15,9 +16,15 @@ def render():
     if action == "Zutat hinzufügen":
         with st.form("vorrat_form"):
             try:
-                vorhandene_zutaten = requests.get(
-                    f"{ZUTATEN_API}/namen").json()
-            except:
+                response = requests.get(f"{ZUTATEN_API}/namen")
+                response.raise_for_status()
+                vorhandene_zutaten = response.json()
+            except requests.exceptions.RequestException as e:
+                st.error(f"Fehler beim Laden der Zutatennamen: {e}")
+                vorhandene_zutaten = []
+            except ValueError as e:  # Catch JSON decoding errors
+                st.error(
+                    f"Fehler beim Verarbeiten der Zutatennamen-Antwort: {e}")
                 vorhandene_zutaten = []
 
             vorschlag = st.selectbox("Vorschlag wählen (optional)", [
@@ -80,8 +87,14 @@ def render():
     st.subheader("🛆 Dein aktueller Vorrat")
 
     try:
-        eintraege = requests.get(API_BASE).json()
-    except:
+        response = requests.get(API_BASE)
+        response.raise_for_status()
+        eintraege = response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Fehler beim Abrufen der Vorratsdaten: {e}")
+        eintraege = []
+    except ValueError as e:
+        st.error(f"Fehler beim Verarbeiten der API-Antwort: {e}")
         eintraege = []
 
     if eintraege:
@@ -95,7 +108,16 @@ def render():
                 menge_text += f" 🔴 (unter Mindestbestand: {eintrag['mindestbestand']} {eintrag['einheit']})"
 
             col2.write(menge_text)
-            col3.write(eintrag.get("haltbar_bis", "-"))
+
+            haltbar_bis_value = eintrag.get("haltbar_bis")
+            if haltbar_bis_value:
+                try:
+                    haltbar_bis_date = datetime.date.fromisoformat(haltbar_bis_value)
+                    col3.markdown(check_haltbarkeit(haltbar_bis_date), unsafe_allow_html=True)
+                except ValueError:
+                    col3.write("Ungültiges Datum")
+            else:
+                col3.write("-")
 
             if col4.button("🗑️", key=f"delete_{eintrag['id']}"):
                 requests.delete(f"{API_BASE}/{eintrag['id']}")

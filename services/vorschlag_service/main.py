@@ -13,7 +13,7 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 
 
-@app.get("/api/vorschlag")
+@app.get("/api/vorschlaege")
 def get_vorschlaege(db: Session = Depends(get_db)):
     rezepte = db.query(Rezept).options(joinedload(
         Rezept.rezept_zutaten).joinedload(RezeptZutat.zutat)).all()

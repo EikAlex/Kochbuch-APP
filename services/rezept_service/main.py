@@ -24,51 +24,76 @@ class RezeptInput(BaseModel):
 
 
 @app.get("/api/rezepte")
-def list_rezepte(db: Session = Depends(get_db)):
-    rezepte = db.query(Rezept).options(
-        joinedload(Rezept.rezept_zutaten).joinedload(RezeptZutat.zutat)
-    ).all()
-    result = []
-    for rezept in rezepte:
-        result.append({
+def get_rezepte(name: str = None, db: Session = Depends(get_db)):
+    """
+    Retrieves recipes. If a name is provided, retrieves the recipe by name.
+    """
+    if name:
+        rezept = db.query(Rezept).filter_by(name=name).first()
+        if not rezept:
+            raise HTTPException(status_code=404, detail="Recipe not found.")
+        return {
             "id": rezept.id,
             "name": rezept.name,
-            "beschreibung": rezept.beschreibung,
+            "anleitung": rezept.anleitung,
+            "portionen": rezept.portionen,
             "zutaten": [
                 {
-                    "zutat_id": rz.zutat_id,
                     "zutat_name": rz.zutat.name,
                     "menge": rz.menge,
-                    "einheit": rz.zutat.einheit
-                } for rz in rezept.rezept_zutaten
-            ]
-        })
-    return result
+                    "einheit": rz.zutat.einheit,
+                }
+                for rz in rezept.rezept_zutaten
+            ],
+        }
+    else:
+        rezepte = db.query(Rezept).all()
+        return [
+            {
+                "id": rezept.id,
+                "name": rezept.name,
+                "anleitung": rezept.anleitung,
+                "portionen": rezept.portionen,
+            }
+            for rezept in rezepte
+        ]
 
 
 @app.post("/api/rezepte")
-def add_rezept(rezept_input: RezeptInput, db: Session = Depends(get_db)):
-    existing = db.query(Rezept).filter(
-        Rezept.name == rezept_input.name).first()
-    if existing:
-        raise HTTPException(
-            status_code=400, detail="Rezeptname existiert bereits")
+def create_rezept(rezept_data: RezeptInput, db: Session = Depends(get_db)):
+    """
+    Creates a new recipe and its associated ingredients.
+    """
+    # Check if the recipe already exists
+    exists = db.query(Rezept).filter_by(name=rezept_data.name).first()
+    if exists:
+        raise HTTPException(status_code=400, detail="Recipe already exists.")
 
-    rezept = Rezept(name=rezept_input.name,
-                    beschreibung=rezept_input.beschreibung)
+    # Create the recipe
+    rezept = Rezept(
+        name=rezept_data.name,
+        anleitung=rezept_data.beschreibung,
+        portionen=rezept_data.portionen,
+    )
     db.add(rezept)
-    db.commit()
-    db.refresh(rezept)
+    db.commit()  # Commit to get the recipe ID
 
-    for z in rezept_input.zutaten:
-        rz = RezeptZutat(
+    # Add ingredients to the recipe
+    for zutat_data in rezept_data.zutaten:
+        zutat = db.query(Zutat).get(zutat_data.zutat_id)
+        if not zutat:
+            raise HTTPException(
+                status_code=404, detail=f"Ingredient with ID '{zutat_data.zutat_id}' not found."
+            )
+        rezept_zutat = RezeptZutat(
             rezept_id=rezept.id,
-            zutat_id=z.zutat_id,
-            menge=z.menge
+            zutat_id=zutat.id,
+            menge=zutat_data.menge,
         )
-        db.add(rz)
+        db.add(rezept_zutat)
+
     db.commit()
-    return {"status": "ok", "id": rezept.id}
+    return {"message": f"Recipe '{rezept_data.name}' created successfully."}
 
 
 @app.delete("/api/rezepte/{rezept_id}")

@@ -12,4 +12,4 @@ COPY shared ./shared
 COPY services/vorschlag_service/. .
 
 # Starte die FastAPI-Anwendung
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5001"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5003"]

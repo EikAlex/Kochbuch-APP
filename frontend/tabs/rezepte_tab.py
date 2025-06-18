@@ -30,14 +30,20 @@ def render():
 
     elif st.session_state.rezept_phase == "zutaten":
         st.markdown(
-            f"**Rezept:** {st.session_state.rezeptname} für {st.session_state.portionen} Portion(en)")
+            f"**Rezept:** {st.session_state.rezeptname} für {st.session_state.portionen} Portion(en)"
+        )
 
         try:
-            zutaten_response = requests.get(f"{ZUTATEN_API}").json()
+            response = requests.get(f"{ZUTATEN_API}")
+            response.raise_for_status()
+            zutaten_response = response.json()
+            if not zutaten_response:
+                st.warning("Keine Zutaten gefunden.")
             zutaten_ids = [z['id'] for z in zutaten_response]
             zutaten_namen = [
                 f"{z['name']} ({z['einheit']})" for z in zutaten_response]
-        except:
+        except requests.exceptions.RequestException as e:
+            st.error(f"Fehler beim Abrufen der Zutaten: {e}")
             zutaten_ids = []
             zutaten_namen = []
 
@@ -92,30 +98,33 @@ def render():
                 st.session_state.rezept_zutaten_liste = []
                 st.rerun()
             else:
-                st.error(f"Fehler: {res.text}")
+                st.error(f"Fehler beim Speichern des Rezepts: {res.status_code} - {res.text}")
 
     st.divider()
     st.subheader("📖 Deine Rezepte")
 
     rezepte = requests.get(API_BASE).json()
-    for i, rezept in enumerate(rezepte):
-        with st.expander(rezept["name"]):
-            st.markdown(rezept.get("beschreibung") or "_Keine Beschreibung_")
-            portionen_input = st.number_input(
-                f"👨‍🍳 Wie viele Portionen möchtest du kochen?",
-                min_value=1, value=1, step=1, key=f"portionen_{rezept['id']}"
-            )
+    if not rezepte:
+        st.info("Keine Rezepte gefunden.")
+    else:
+        for i, rezept in enumerate(rezepte):
+            with st.expander(rezept["name"]):
+                st.markdown(rezept.get("beschreibung") or "_Keine Beschreibung_")
+                portionen_input = st.number_input(
+                    f"👨‍🍳 Wie viele Portionen möchtest du kochen?",
+                    min_value=1, value=1, step=1, key=f"portionen_{rezept['id']}"
+                )
 
-            st.markdown("**Zutaten:**")
-            for rz in rezept["zutaten"]:
-                berechnete_menge = rz["menge"] * portionen_input
-                st.write(
-                    f"- {berechnete_menge} {rz['einheit']} {rz['zutat_name']}")
+                st.markdown("**Zutaten:**")
+                for rz in rezept["zutaten"]:
+                    berechnete_menge = rz["menge"] * portionen_input
+                    st.write(
+                        f"- {berechnete_menge} {rz['einheit']} {rz['zutat_name']}")
 
-            if st.button("🗑️ Löschen", key=f"delete_{rezept['id']}_{i}"):
-                res = requests.delete(f"{API_BASE}/{rezept['id']}")
-                if res.status_code == 200:
-                    st.success(f"✅ Rezept '{rezept['name']}' gelöscht!")
-                    st.rerun()
-                else:
-                    st.error(f"❌ Fehler beim Löschen: {res.text}")
+                if st.button("🗑️ Löschen", key=f"delete_{rezept['id']}_{i}"):
+                    res = requests.delete(f"{API_BASE}/{rezept['id']}")
+                    if res.status_code == 200:
+                        st.success(f"✅ Rezept '{rezept['name']}' gelöscht!")
+                        st.rerun()
+                    else:
+                        st.error(f"Fehler beim Löschen des Rezepts: {res.status_code} - {res.text}")

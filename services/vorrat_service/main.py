@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from shared.db_models import Base, Vorrat, Zutat
-from shared.database import engine, SessionLocal, get_db  # Zugriff auf shared/database
+# Zugriff auf shared/database
+from shared.database import engine, SessionLocal, get_db
 from pydantic import BaseModel
 import datetime
 from typing import List, Optional
@@ -28,28 +29,33 @@ class VorratUpdate(BaseModel):
 
 class VorratResponse(BaseModel):
     id: int
-    name: str
-    einheit: str
+    name: str  # This will come from Zutat
+    einheit: str  # This will come from Zutat
     menge: int
-    haltbar_bis: Optional[datetime.date] # Use date directly
+    haltbar_bis: Optional[datetime.date]
     mindestbestand: Optional[int]
 
-    class Config:
-        orm_mode = True # If returning ORM objects directly
+    # No orm_mode needed if manually constructing
 
 
 @app.get("/api/vorrat", response_model=List[VorratResponse])
 def list_vorrat(db: Session = Depends(get_db)):
-    vorrat_items = db.query(Vorrat).join(Zutat).all()
-    # If not using orm_mode, manually map:
-    return [{
-        "id": v.id,
-        "name": v.zutat.name,
-        "einheit": v.zutat.einheit,
-        "menge": v.menge,
-        "haltbar_bis": v.haltbar_bis.isoformat() if v.haltbar_bis else None,
-        "mindestbestand": v.mindestbestand
-    } for v in vorrat_items]
+    # Ensure join is explicit if needed
+    vorrat_items = db.query(Vorrat).join(Vorrat.zutat).all()
+
+    response_list = []
+    for v_item in vorrat_items:
+        response_list.append(
+            VorratResponse(
+                id=v_item.id,
+                name=v_item.zutat.name,
+                einheit=v_item.zutat.einheit,
+                menge=v_item.menge,
+                haltbar_bis=v_item.haltbar_bis,
+                mindestbestand=v_item.mindestbestand
+            )
+        )
+    return response_list
 
 
 @app.post("/api/vorrat")
@@ -127,3 +133,9 @@ def delete_zutat(name: str, db: Session = Depends(get_db)):
     db.delete(zutat)
     db.commit()
     return {"status": "ok", "message": f"Zutat {name} gelöscht"}
+
+
+@app.get("/api/zutaten")
+def get_zutaten(db: Session = Depends(get_db)):
+    zutaten = db.query(Zutat).order_by(Zutat.name).all()
+    return [{"id": z.id, "name": z.name, "einheit": z.einheit} for z in zutaten]
