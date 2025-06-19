@@ -63,11 +63,14 @@ Kochbuch-App/
 │ 
 │
 ├── services/                   ← Jeder Dienst ist ein Microservice
+│   ├── init_services/
+│   │   ├── init_db.py          ← initialsierung der Grundzuteten und eines Testrezeptes
+│   │   └── Dockerfile
 │   ├── vorrat_service/
 │   │   ├── main.py             ← FastAPI-Server für Vorrat
 │   │   ├── Dockerfile
 │   │   └── requirements.txt
-│   ├── rezept_service/         ← sinngemäß wie vorrat_service
+│   ├── rezept_service/         ← sinngemäßer Aufbau wie vorrat_service
 │   ├── vorschlag_service/
 │   ├── einkaufsliste_service/
 │   └── rezept-import_service/  
@@ -81,11 +84,15 @@ Kochbuch-App/
 │   │   ├── rezept.py
 │   │   ├── vorrat.py
 │   │   └── zutat.py
-│   └── scripts
+│   ├── scripts
 │       └── wit-for-it.sh
+│   ├── config.py                ← Konfiguration der Database 
+│   ├── database.py              ← Initialisierung der Database 
+│   └── utils.py                 ← Helper Funktionen 
 │
 ├── docker-compose.yml         ← Zum Hochfahren aller Services + DB  
 ├── .env                       ← API-Keys, DB-URL, Secrets
+├── templates.py               ← Templates für Icons
 ├── LICENSE
 └── README.md
 ```
@@ -104,6 +111,7 @@ Jede der folgenden Komponenten wird in einem separaten Container betrieben:
 | Service                  | Beschreibung                                 |
 |--------------------------|----------------------------------------------|
 | `frontend`               | Streamlit-UI mit Tabs für die Webanwendung   |
+| `init_service`           | Datenbank-Service für Initialisierung von Grundzutaten und eines Testrezeptes, wird nach inplemtierung wieder beendet       |
 | `vorrat_service`         | FastAPI-Service für Vorratsverwaltung        |
 | `rezepte_service`        | FastAPI-Service für Rezepteverwaltung        |
 | `vorschlag_service`      | FastAPI-Service für Rezeptvorschläge         |
@@ -212,6 +220,7 @@ graph TD
         B3[vorschlag_service]
         B4[einkaufsliste_service]
         B5[import_service]
+        B6[init_service]
     end
 
     subgraph Shared
@@ -233,12 +242,14 @@ graph TD
     B3 --> C1
     B4 --> C1
     B5 --> C1
+    B6 --> C1
 
     B1 --> C2
     B2 --> C2
     B3 --> C2
     B4 --> C2
     B5 --> C2
+    B6 --> C2
 
 ```
 ---
@@ -252,6 +263,7 @@ sequenceDiagram
     participant VorschlagService as Vorschlag Service (FastAPI)
     participant EinkaufslisteService as Einkaufsliste Service (FastAPI)
     participant ImportService as Import Service (FastAPI)
+    participant InitService as Init Service (FastAPI)
     participant DB as PostgreSQL + Shared Models
 
     User->>Frontend: Öffnet App / Wechselt Tab
@@ -290,6 +302,7 @@ sequenceDiagram
         ImportService-->>Frontend: Antwort
     end
 ```
+
 ---
 ### Klassen-Diagramm
 ```mermaid
@@ -352,6 +365,7 @@ graph TD
         Vorschlag[Vorschlag-Service Container]
         Einkaufsliste[Einkaufsliste-Service Container]
         Import[Import-Service Container]
+        Init[Init-Service Container]
 
         Postgres[(PostgreSQL-Datenbank)]
     end
@@ -369,6 +383,7 @@ graph TD
     Vorschlag --> Postgres
     Einkaufsliste --> Postgres
     Import --> Postgres
+    Init --> Postgres
 ```
 
 ---
