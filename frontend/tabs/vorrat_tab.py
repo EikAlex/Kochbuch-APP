@@ -84,7 +84,7 @@ def render():
                     st.error(f"❌ Fehler beim Löschen: {res.text}")
 
     st.divider()
-    st.subheader("🛆 Dein aktueller Vorrat")
+    st.subheader("📦 Dein aktueller Vorrat")
 
     try:
         response = requests.get(API_BASE)
