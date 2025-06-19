@@ -103,7 +103,14 @@ def render():
     st.divider()
     st.subheader("📖 Deine Rezepte")
 
-    rezepte = requests.get(API_BASE).json()
+    try:
+        response = requests.get(API_BASE, timeout=10)
+        response.raise_for_status()
+        rezepte = response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Fehler beim Abrufen der Rezepte: {e}")
+        rezepte = []
+
     if not rezepte:
         st.info("Keine Rezepte gefunden.")
     else:
@@ -128,3 +135,11 @@ def render():
                         st.rerun()
                     else:
                         st.error(f"Fehler beim Löschen des Rezepts: {res.status_code} - {res.text}")
+
+    try:
+        response = requests.get(f"{ZUTATEN_API}/namen")
+        response.raise_for_status()
+        vorhandene_zutaten = response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Fehler beim Laden der Zutatennamen: {e}")
+        vorhandene_zutaten = []

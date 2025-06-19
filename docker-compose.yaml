@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # PostgreSQL-Datenbank-Container
   db:
@@ -14,7 +12,9 @@ services:
       - pgdata:/var/lib/postgresql/data
     networks:
       - cooking_network
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+#
   # Frontend: Streamlit App
   frontend:
     build:
@@ -23,11 +23,26 @@ services:
     ports:
       - "8501:8501"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
     networks:
       - cooking_network
+
+  # Initialisierungs-Service
+  init_service:
+    build:
+      context: .
+      dockerfile: services/init_service/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cooking_network
+    environment:
+      DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
+    restart: "no"  
 
   # Vorrat-Service
   vorrat_service:
@@ -37,7 +52,8 @@ services:
     ports:
       - "5001:5001"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
     networks:
@@ -51,7 +67,8 @@ services:
     ports:
       - "5002:5002"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
     networks:
@@ -65,7 +82,8 @@ services:
     ports:
       - "5003:5003"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
     networks:
@@ -79,7 +97,8 @@ services:
     ports:
       - "5004:5004"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
     networks:
@@ -93,7 +112,8 @@ services:
     ports:
       - "5005:5005"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://postgres:example@db:5432/cooking_db"
       OPENAI_API_KEY: "${openai_api_key}"

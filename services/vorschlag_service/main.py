@@ -10,8 +10,6 @@ from shared.database import engine, SessionLocal, get_db
 
 app = FastAPI()
 
-Base.metadata.create_all(bind=engine)
-
 
 @app.get("/api/vorschlaege")
 def get_vorschlaege(db: Session = Depends(get_db)):

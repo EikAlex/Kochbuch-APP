@@ -5,19 +5,21 @@ from shared.db_models import Base, Zutat, Rezept, RezeptZutat
 from llm_core import extrahiere_rezept_daten
 from pydantic import BaseModel
 
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+
 class ExtraktionRequest(BaseModel):
     text: str
+
 
 @app.post("/api/extrahieren")
 def extrahiere(text_input: ExtraktionRequest, db: Session = Depends(get_db)):
     try:
         rezept_daten = extrahiere_rezept_daten(text_input.text)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fehler beim Abrufen der LLM-Antwort: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Fehler beim Abrufen der LLM-Antwort: {e}")
 
     rezept = Rezept(
         name=rezept_daten["name"],

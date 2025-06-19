@@ -1,15 +1,12 @@
 from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 from shared.db_models import Base, Zutat, Rezept, RezeptZutat
-from shared.database import engine, SessionLocal, get_db  # Zugriff auf shared/database
+# Zugriff auf shared/database
+from shared.database import engine, SessionLocal, get_db
 from pydantic import BaseModel
 from typing import List
 
 app = FastAPI()
-
-Base.metadata.create_all(bind=engine)
-
-# Pydantic Schema
 
 
 class RezeptZutatInput(BaseModel):
@@ -25,9 +22,6 @@ class RezeptInput(BaseModel):
 
 @app.get("/api/rezepte")
 def get_rezepte(name: str = None, db: Session = Depends(get_db)):
-    """
-    Retrieves recipes. If a name is provided, retrieves the recipe by name.
-    """
     if name:
         rezept = db.query(Rezept).filter_by(name=name).first()
         if not rezept:
@@ -35,8 +29,7 @@ def get_rezepte(name: str = None, db: Session = Depends(get_db)):
         return {
             "id": rezept.id,
             "name": rezept.name,
-            "anleitung": rezept.anleitung,
-            "portionen": rezept.portionen,
+            "beschreibung": rezept.beschreibung,
             "zutaten": [
                 {
                     "zutat_name": rz.zutat.name,
@@ -52,8 +45,15 @@ def get_rezepte(name: str = None, db: Session = Depends(get_db)):
             {
                 "id": rezept.id,
                 "name": rezept.name,
-                "anleitung": rezept.anleitung,
-                "portionen": rezept.portionen,
+                "beschreibung": rezept.beschreibung,
+                "zutaten": [
+                    {
+                        "zutat_name": rz.zutat.name,
+                        "menge": rz.menge,
+                        "einheit": rz.zutat.einheit,
+                    }
+                    for rz in rezept.rezept_zutaten
+                ],
             }
             for rezept in rezepte
         ]
@@ -61,39 +61,41 @@ def get_rezepte(name: str = None, db: Session = Depends(get_db)):
 
 @app.post("/api/rezepte")
 def create_rezept(rezept_data: RezeptInput, db: Session = Depends(get_db)):
-    """
-    Creates a new recipe and its associated ingredients.
-    """
-    # Check if the recipe already exists
-    exists = db.query(Rezept).filter_by(name=rezept_data.name).first()
-    if exists:
-        raise HTTPException(status_code=400, detail="Recipe already exists.")
+    try:
+        # Validierung der Eingaben
+        if not rezept_data.name or not rezept_data.beschreibung or not rezept_data.zutaten:
+            raise HTTPException(status_code=400, detail="Ungültige Eingabe: Name, Beschreibung und Zutaten müssen angegeben werden.")
 
-    # Create the recipe
-    rezept = Rezept(
-        name=rezept_data.name,
-        anleitung=rezept_data.beschreibung,
-        portionen=rezept_data.portionen,
-    )
-    db.add(rezept)
-    db.commit()  # Commit to get the recipe ID
+        # Prüfe, ob das Rezept bereits existiert
+        exists = db.query(Rezept).filter_by(name=rezept_data.name).first()
+        if exists:
+            raise HTTPException(status_code=400, detail="Rezept existiert bereits.")
 
-    # Add ingredients to the recipe
-    for zutat_data in rezept_data.zutaten:
-        zutat = db.query(Zutat).get(zutat_data.zutat_id)
-        if not zutat:
-            raise HTTPException(
-                status_code=404, detail=f"Ingredient with ID '{zutat_data.zutat_id}' not found."
-            )
-        rezept_zutat = RezeptZutat(
-            rezept_id=rezept.id,
-            zutat_id=zutat.id,
-            menge=zutat_data.menge,
+        # Rezept erstellen
+        rezept = Rezept(
+            name=rezept_data.name,
+            beschreibung=rezept_data.beschreibung,  # Anpassung an das Modell
         )
-        db.add(rezept_zutat)
+        db.add(rezept)
+        db.commit()
 
-    db.commit()
-    return {"message": f"Recipe '{rezept_data.name}' created successfully."}
+        # Zutaten hinzufügen
+        for zutat_data in rezept_data.zutaten:
+            zutat = db.query(Zutat).get(zutat_data.zutat_id)
+            if not zutat:
+                raise HTTPException(status_code=404, detail=f"Zutat mit ID '{zutat_data.zutat_id}' nicht gefunden.")
+            rezept_zutat = RezeptZutat(
+                rezept_id=rezept.id,
+                zutat_id=zutat.id,
+                menge=zutat_data.menge,
+            )
+            db.add(rezept_zutat)
+
+        db.commit()
+        return {"message": f"Rezept '{rezept_data.name}' erfolgreich erstellt."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Fehler beim Erstellen des Rezepts: {str(e)}")
 
 
 @app.delete("/api/rezepte/{rezept_id}")

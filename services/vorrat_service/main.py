@@ -9,10 +9,6 @@ from typing import List, Optional
 
 app = FastAPI()
 
-Base.metadata.create_all(bind=engine)
-
-# Pydantic Schemas
-
 
 class VorratInput(BaseModel):
     name: str
@@ -60,33 +56,42 @@ def list_vorrat(db: Session = Depends(get_db)):
 
 @app.post("/api/vorrat")
 def add_zutat_eintrag(vorrat: VorratInput, db: Session = Depends(get_db)):
-    zutat = db.query(Zutat).filter(Zutat.name == vorrat.name).first()
-    if not zutat:
-        zutat = Zutat(name=vorrat.name, einheit=vorrat.einheit)
-        db.add(zutat)
+    try:
+        # Validierung der Eingaben
+        if not vorrat.name or not vorrat.einheit or vorrat.menge <= 0:
+            raise HTTPException(status_code=400, detail="Ungültige Eingabe: Name, Einheit und Menge müssen gültig sein.")
+
+        # Prüfe, ob die Zutat bereits existiert
+        zutat = db.query(Zutat).filter(Zutat.name == vorrat.name).first()
+        if not zutat:
+            zutat = Zutat(name=vorrat.name, einheit=vorrat.einheit)
+            db.add(zutat)
+            db.commit()
+            db.refresh(zutat)
+
+        # Füge Vorratseintrag hinzu
+        vorhandener_eintrag = db.query(Vorrat).filter(
+            Vorrat.zutat_id == zutat.id,
+            Vorrat.haltbar_bis == vorrat.haltbar_bis
+        ).first()
+
+        if vorhandener_eintrag:
+            vorhandener_eintrag.menge += vorrat.menge
+            db.commit()
+            return {"status": "updated", "id": vorhandener_eintrag.id}
+
+        neues = Vorrat(
+            zutat_id=zutat.id,
+            menge=vorrat.menge,
+            haltbar_bis=vorrat.haltbar_bis,
+            mindestbestand=vorrat.mindestbestand
+        )
+        db.add(neues)
         db.commit()
-        db.refresh(zutat)
-
-    vorhandener_eintrag = db.query(Vorrat).filter(
-        Vorrat.zutat_id == zutat.id,
-        Vorrat.haltbar_bis == datetime.date.fromisoformat(vorrat.haltbar_bis)
-    ).first()
-
-    if vorhandener_eintrag:
-        vorhandener_eintrag.menge += vorrat.menge
-        vorhandener_eintrag.mindestbestand = vorrat.mindestbestand or vorhandener_eintrag.mindestbestand
-        db.commit()
-        return {"status": "updated", "id": vorhandener_eintrag.id}
-
-    neues = Vorrat(
-        zutat_id=zutat.id,
-        menge=vorrat.menge,
-        haltbar_bis=datetime.date.fromisoformat(vorrat.haltbar_bis),
-        mindestbestand=vorrat.mindestbestand
-    )
-    db.add(neues)
-    db.commit()
-    return {"status": "ok", "id": neues.id}
+        return {"status": "ok", "id": neues.id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Fehler beim Hinzufügen: {str(e)}")
 
 
 @app.put("/api/vorrat/{vorrat_id}")

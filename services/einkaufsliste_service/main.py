@@ -8,7 +8,6 @@ from typing import List
 import datetime
 
 app = FastAPI()
-Base.metadata.create_all(bind=engine)
 
 
 class EinkaufInput(BaseModel):

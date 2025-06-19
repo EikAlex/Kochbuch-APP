@@ -1,7 +1,7 @@
 import streamlit as st
 import datetime
 import requests
-from shared.util import check_haltbarkeit
+from shared.utils import check_haltbarkeit
 
 API_BASE = "http://vorrat_service:5001/api/vorrat"
 ZUTATEN_API = "http://vorrat_service:5001/api/zutaten"
@@ -125,3 +125,13 @@ def render():
                 st.rerun()
     else:
         st.info("Noch nichts im Vorrat.")
+
+    try:
+        response = requests.get(ZUTATEN_API, timeout=10)
+        response.raise_for_status()
+        zutaten_response = response.json()
+        if not zutaten_response:
+            st.warning("Keine Zutaten gefunden.")
+    except requests.exceptions.RequestException as e:
+        st.error(f"Fehler beim Abrufen der Zutaten: {e}")
+        zutaten_response = []
