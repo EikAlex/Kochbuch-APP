@@ -171,7 +171,7 @@ Diese Architektur ist eine robuste Grundlage für **wachstumsfähige**, **wartba
 ## 1. Klone das Repository
 git clone https://github.com/EikAlex/Kochbuch-App.git
 
-cd Cocking-App
+cd Kochbuch-App
 
 ## 2. Starte die Anwendung
 docker-compose up --build (<Docker 20.10)
